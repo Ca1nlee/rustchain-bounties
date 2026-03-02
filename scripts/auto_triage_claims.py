@@ -82,17 +82,6 @@ DEFAULT_TARGETS = [
     {
         "owner": "Scottcjn",
         "repo": "rustchain-bounties",
-        "issue": 374,
-        "min_account_age_days": 30,
-        "required_stars": [],
-        "require_wallet": True,
-        "require_bottube_username": False,
-        "require_proof_link": True,
-        "name": "First Attest Bonus",
-    },
-    {
-        "owner": "Scottcjn",
-        "repo": "rustchain-bounties",
         "issue": 157,
         "min_account_age_days": 30,
         "required_stars": ["beacon-skill"],
@@ -122,17 +111,6 @@ DEFAULT_TARGETS = [
         "require_bottube_username": False,
         "require_proof_link": True,
         "name": "BoTTube Star + Share Why",
-    },
-    {
-        "owner": "Scottcjn",
-        "repo": "rustchain-bounties",
-        "issue": 377,
-        "min_account_age_days": 30,
-        "required_stars": [],
-        "require_wallet": True,
-        "require_bottube_username": False,
-        "require_proof_link": True,
-        "name": "Beacon Mechanism Falsification",
     },
 ]
 
@@ -468,7 +446,14 @@ def main() -> int:
         req_stars = list(target.get("required_stars", []))
 
         issue_ref = f"{owner}/{repo}#{issue}"
-        issue_obj = _gh_request("GET", f"/repos/{owner}/{repo}/issues/{issue}", token)
+        try:
+            issue_obj = _gh_request("GET", f"/repos/{owner}/{repo}/issues/{issue}", token)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                print(f"WARN: {issue_ref} not found (HTTP 404), skipping target")
+                results_by_issue[issue_ref] = []
+                continue
+            raise
         comments_url = issue_obj["comments_url"]
         comments = _gh_paginated(comments_url, token)
 
